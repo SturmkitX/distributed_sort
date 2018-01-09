@@ -1,0 +1,6 @@
+*.swp
+*.pyc
+tests/numbers/numbers_test
+server/numbers_test*
+server/merged_final
+external_source/numbers_test

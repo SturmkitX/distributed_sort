@@ -1,0 +1,60 @@
+# My project's README
+
+How everything works:
+The applications uses TCP/IP sockets (SOCK_STREAM) over IPv4 (AF_INET)
+Alternatives would be:
+
+for TCP/IP : UDP (User DataGram) (SOCK_DGRAM)
+Why TCP/IP over UDP:
+Advantages:
+  a) reliable (we receive all the data sent by the other end connection in order)
+    --- if we can't receive all data at once, it remains on the socket
+    --- (retained by the system's kernel, up to 256 kb of data) until read
+    --- by socket / application
+
+Disadvantages:
+  a) slower (due to all the routing it must do in order to ensure we get the data and in correct order)
+  b) larger overhead (a TCP/IP header consists of 10 fields, making up for a total of 40 bytes). An 11th field is present in the header, but it is not obligatory to be populated (it can be at most 40-60 bytes long); a UDP socket's header has 8 bytes of data (4 fields)
+
+# 1. Listening for clients and performing I/O operations
+There are 3 main ways to do this, depending on the socket types:
+a) 1 client/thread
+  --- this is the simplest architecture; we use blocking sockets (meaning that listening for a connection will block the current thread until a connection is made). At a small/medium number of clients this can prove to be faster and easier to maintain than other methods. At a large number of clients (eg. 100.000), this method can have a significant impact on performance, due to the overhead necessary to switch between such a large number of threads
+
+b) all clients/1 thread
+  --- this method is useful when the server is kept on a computer with a single processor / core. If the number of connections is not large, it has comparable performance to the method described above. Otherwise, the performance will drop significantly due to the overhead induced by the context switching process. The sockets used here are called non-blocking sockets.
+
+c) n clients/thread
+  --- this method is a hybrid between the two above. Every thread manages a certain number of non-blocking sockets. This is the preferred method as it brings the best performance.
+
+# 2. Blocking and non-blocking sockets?
+The difference between the two is pretty straight-forward:
+--- blocking sockets block your current thread until the operation finishes
+--- non-blocking sockets return immediately
+
+Let's assume that a server listens for connections and a client tries to connect to the server. But the server initially refuses the connection due to some unknown reason:
+Blocking socket: the thread is blocked and the connection is tried again until it succeeds or a timeout occurs
+Non-blocking socket: the socket returns a connection error immediately
+
+Receiving a chunk of data (let's say 1024 bytes long) that is larger than your buffer (512 bytes for example):
+Blocking socket: The remaining 512 bytes are stored by the kernel and it is retrieved at the next I/O operation
+Non-Blocking socket: The same as blocking sockets
+
+Performing a receive request but nothing is to be received:
+Blocking socket: The thread will be blocked until there is something to receive (no matter the size)
+Non-blocking socket: An error is raised
+
+
+UDP behaviour (extra content):
+Connection: UDP doesn't have the notion of client-server. A package is regarded as simply being sent from one computer to another, but no relationship is established.
+Sending data: You send the data to a certain address, but you don't know what happens to the packages unless there is some transmission protocol present
+Receiving data:
+  --- if received data is larger than the buffer: the buffer holds what it can, and the rest is discarded
+  --- if no data is received, probably nothing happens (I must do some research on that)
+
+Why are admin credentials encrypted?
+First of all, transmitting sensitive data over the Internet is pretty dangerous, so it has to be encrypted somehow. The application uses MD5 hashing to transmit this data.
+
+But can't this data just be picked up somehow and transmit it anyways by using a modified version of the code?
+Indeed, it is possible. In a secure environment, the encryption key used by MD5 should be changed regularly, and the admins must be informed about this change.
+But this aspect is beyond the scope of this project.

@@ -1,0 +1,13 @@
+# Remark : Do not send 2 consecutive messages on TCP, since the streams may be concatenated and the delimiters won't be found
+
+[X] Make the server continue running after finishing a batch
+[X] Make the client support multithreading (1 thread = 1 client, simpler that way)
+[] Update the admin package
+[X] Add configuration files for all packages ([X]server, [X]client)
+[Not quite possible now] Refactor the communications package (make it one global package, add LZMA compression with a good compression / overhead ratio)
+[X Bypassed] See what happens when more than 1024 files are opened at once
+[X] Add the ability to redirect received message to a file, instead to memory (inside CommunicationProtocol, it may save the user from memory crashes)
+
+[] CommunicationProtocol has no need for LZMA compression, since messages are fairly small and compression would be unnecessary computation. Instead, it should be introduced somehow inside the LargeCommunicationProtocol module
+[X] Add error correction code for chunk transmission: keep a copy of every transmitted (unsorted) chunk on the server, along with its id, send the chunk with the id to the client, if the client gets a damaged chunk it will report to the server and expect the correct chunk to be received; the server ALWAYS has the correct chunk
+[] Add the option to get the sorting rule from the external source, then upload it to the server, using the admin package
